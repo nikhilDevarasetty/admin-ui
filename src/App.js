@@ -7,7 +7,7 @@ import './tailwind.css'
 
 const App = () => {
   const [state, setState] = useState({
-    data: [], curData: [], loading: true, itemsSelected: [],
+    data: [], curData: [], loading: true, itemsSelected: [], editItems: [],
     paginationData: {total_pages: 0, total_results: 0, cur_page: 0}
   })
   const staticData = useRef([])
@@ -38,6 +38,37 @@ const App = () => {
       data: newData, curData: newData.slice(0, 10), itemsSelected: id ? itemsSelected : [],
       paginationData: {total_pages: Math.ceil(newData.length / 10), cur_page: 0, total_results: newData.length},
     })
+  }
+
+  const editItemsHandler = (editdata, id) => {
+    const { editItems } = state
+
+    if(editdata) {
+      const { data, paginationData } = state
+      const { cur_page: curPage } = paginationData
+
+      const name = document.getElementById(`name${id}`).value
+      const email = document.getElementById(`email${id}`).value
+      const role = document.getElementById(`role${id}`).value
+
+      const newData = data.map(item => {
+        if(item.id === id) {
+          item = {...item, name, email, role}
+        }
+        return item
+      })
+
+      staticData.current = staticData.current.map(item => {
+        if(item.id === id) {
+          item = {...item, name, email, role}
+        }
+        return item
+      })
+
+      setSubState({ data: newData, curData: newData.slice(curPage * 10, (curPage + 1) * 10) })
+
+    }
+    setSubState({ editItems: editItems.includes(id) ? editItems.filter(item => item !== id) : [...editItems, id]})
   }
 
   const navigateToPage = (page) => {
@@ -87,7 +118,7 @@ const App = () => {
     return () => document.removeEventListener('keyup', onEnter)
   }, [state])
 
-  const { paginationData, itemsSelected, curData, loading, data } = state
+  const { paginationData, itemsSelected, editItems, curData, loading, data } = state
   const checkbox = 
     <input 
       type='checkbox' 
@@ -112,6 +143,8 @@ const App = () => {
         selectHandler={selectHandler}
         itemsSelected={itemsSelected}
         deleteHandler={deleteSelected}
+        editItems={editItems}
+        editItemsHandler={editItemsHandler}
       />
       { !loading && curData.length > 0 &&
         <div className='text-center'>
